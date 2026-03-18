@@ -4,12 +4,15 @@ import { findFirstMatchingRule } from '../core/ruleEngine.js';
 import type { ConfirmationEvent, DetectionRule } from '../core/types.js';
 import type { TmuxPaneRef } from './tmux.js';
 
-function inferTool(text: string): ConfirmationEvent['tool'] {
+export function inferTool(text: string): ConfirmationEvent['tool'] {
   const lower = text.toLowerCase();
-  if (lower.includes('codex')) return 'codex';
-  if (lower.includes('claude')) return 'claude';
-  if (lower.includes('opencode')) return 'opencode';
-  return 'unknown';
+  const tools: { name: ConfirmationEvent['tool']; pos: number }[] = [
+    { name: 'codex', pos: lower.lastIndexOf('codex') },
+    { name: 'claude', pos: lower.lastIndexOf('claude') },
+    { name: 'opencode', pos: lower.lastIndexOf('opencode') },
+  ];
+  const best = tools.filter((t) => t.pos >= 0).sort((a, b) => b.pos - a.pos)[0];
+  return best ? best.name : 'unknown';
 }
 
 function pickEvidence(text: string): string[] {

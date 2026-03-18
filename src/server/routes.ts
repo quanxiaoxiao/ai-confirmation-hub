@@ -2,7 +2,8 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { transitionEvent } from '../core/event.js';
 import type { EventStatus } from '../core/types.js';
 import type { EventStore } from './store.js';
-import { focusPane } from '../watcher/tmux.js';
+import { focusPane, listPanesDetailed, capturePaneText } from '../watcher/tmux.js';
+import { inferTool } from '../watcher/detect.js';
 
 export interface HealthProvider {
   watcher: () => { ok: boolean; running: boolean; lastScanAt: string | null; errorCount: number };
@@ -75,6 +76,37 @@ export async function handleRequest(
       watcher: watcherHealth,
       store: { ok: true }
     });
+    return;
+  }
+
+  // GET /panes — list tmux panes running AI tools
+  if (method === 'GET' && path === '/panes') {
+    try {
+      const panes = await listPanesDetailed();
+      const captureLines = 50;
+      const results = await Promise.all(
+        panes.map(async (pane) => {
+          const text = await capturePaneText(pane, captureLines);
+          const tool = inferTool(text);
+          return { ...pane, tool };
+        })
+      );
+      const aiPanes = results.filter((p) => p.tool !== 'unknown');
+      const toolFilter = query.get('tool');
+      const filtered = toolFilter ? aiPanes.filter((p) => p.tool === toolFilter) : aiPanes;
+      writeJson(res, 200, {
+        total: filtered.length,
+        panes: filtered.map((p) => ({
+          session: p.session,
+          window: p.window,
+          windowName: p.windowName,
+          pane: p.pane,
+          tool: p.tool
+        }))
+      });
+    } catch {
+      writeJson(res, 502, { error: 'tmux_unavailable', message: 'Could not list tmux panes. Is tmux running?' });
+    }
     return;
   }
 

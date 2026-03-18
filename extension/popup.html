@@ -131,6 +131,62 @@
     .event-actions button.focus-btn { border-color: #93c5fd; color: #1e40af; font-weight: 600; }
     .event-actions button.focus-btn:hover { background: #dbeafe; }
 
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 8px 0;
+      font-size: 12px;
+      font-weight: 500;
+      text-align: center;
+      border: none;
+      background: none;
+      color: #64748b;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn:hover { color: #334155; }
+    .tab-btn.active {
+      color: #1e293b;
+      border-bottom-color: #3b82f6;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Panes panel */
+    .pane-card {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .pane-card:hover { background: #f1f5f9; }
+    .pane-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .pane-target {
+      font-size: 12px;
+      font-weight: 500;
+      color: #1e293b;
+    }
+    .pane-window-name {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    .pane-summary {
+      font-size: 11px;
+      color: #64748b;
+      padding: 6px 14px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
     .empty {
       text-align: center;
       padding: 40px 14px;
@@ -153,12 +209,21 @@
     <span id="statusDot" class="status-dot off"></span>
   </div>
   <div id="errorBanner" class="error-banner" style="display:none"></div>
-  <div class="toolbar">
-    <span id="eventCount">--</span>
-    <span style="flex:1"></span>
-    <button id="refreshBtn">Refresh</button>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="events">Events</button>
+    <button class="tab-btn" data-tab="panes">Panes</button>
   </div>
-  <div id="eventList" class="event-list"></div>
+  <div id="eventsPanel" class="tab-panel active">
+    <div class="toolbar">
+      <span id="eventCount">--</span>
+      <span style="flex:1"></span>
+      <button id="refreshBtn">Refresh</button>
+    </div>
+    <div id="eventList" class="event-list"></div>
+  </div>
+  <div id="panesPanel" class="tab-panel">
+    <div id="paneList" class="event-list"></div>
+  </div>
   <script src="popup.js"></script>
 </body>
 </html>

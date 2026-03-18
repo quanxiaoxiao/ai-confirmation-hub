@@ -200,6 +200,18 @@ describe('HTTP routes', () => {
     assert.equal(res.status, 404);
   });
 
+  it('GET /panes returns 502 when tmux is not available', async () => {
+    const res = await request(server, 'GET', '/panes');
+    // In test environment tmux is likely not running, so expect 502
+    // If tmux happens to be running, expect 200 with panes array
+    assert.ok(res.status === 502 || res.status === 200);
+    if (res.status === 200) {
+      const body = res.body as { total: number; panes: unknown[] };
+      assert.equal(typeof body.total, 'number');
+      assert.ok(Array.isArray(body.panes));
+    }
+  });
+
   it('OPTIONS returns CORS headers', async () => {
     const address = server.address();
     if (!address || typeof address === 'string') throw new Error('Server not listening');

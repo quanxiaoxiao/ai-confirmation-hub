@@ -5,6 +5,18 @@ const errorBanner = document.getElementById("errorBanner");
 const eventCountEl = document.getElementById("eventCount");
 const eventListEl = document.getElementById("eventList");
 const refreshBtn = document.getElementById("refreshBtn");
+const paneListEl = document.getElementById("paneList");
+
+// Tab switching
+document.querySelectorAll(".tab-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab + "Panel").classList.add("active");
+    if (btn.dataset.tab === "panes") loadPanes();
+  });
+});
 
 refreshBtn.addEventListener("click", loadEvents);
 
@@ -112,4 +124,45 @@ function escapeHtml(str) {
   const d = document.createElement("div");
   d.textContent = str;
   return d.innerHTML;
+}
+
+async function loadPanes() {
+  try {
+    const res = await fetch(`${API_BASE}/panes`);
+    const data = await res.json();
+    const panes = data.panes || [];
+
+    if (panes.length === 0) {
+      paneListEl.innerHTML = renderEmpty("No AI panes", "No tmux panes running AI tools detected");
+      return;
+    }
+
+    const byTool = {};
+    for (const p of panes) {
+      (byTool[p.tool] = byTool[p.tool] || []).push(p);
+    }
+
+    const toolOrder = ["claude", "codex", "opencode"];
+    let html = `<div class="pane-summary">${panes.length} AI pane${panes.length > 1 ? "s" : ""} active</div>`;
+
+    for (const tool of toolOrder) {
+      const group = byTool[tool];
+      if (!group) continue;
+      for (const p of group) {
+        const winLabel = p.windowName ? ` (${escapeHtml(p.windowName)})` : "";
+        html += `
+          <div class="pane-card">
+            <span class="tool-badge ${p.tool}">${p.tool}</span>
+            <div class="pane-info">
+              <div class="pane-target">${escapeHtml(p.session)}:${escapeHtml(p.window)}.${escapeHtml(p.pane)}</div>
+              <div class="pane-window-name">${escapeHtml(p.session)} / window ${escapeHtml(p.window)}${winLabel}</div>
+            </div>
+          </div>`;
+      }
+    }
+
+    paneListEl.innerHTML = html;
+  } catch {
+    paneListEl.innerHTML = renderEmpty("Error", "Could not load panes. Is tmux running?");
+  }
 }
