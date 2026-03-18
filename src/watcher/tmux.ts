@@ -31,6 +31,17 @@ export async function listPanes(): Promise<TmuxPaneRef[]> {
     });
 }
 
+export async function focusPane(paneRef: TmuxPaneRef): Promise<void> {
+  const target = `${paneRef.session}:${paneRef.window}.${paneRef.pane}`;
+
+  // Switch client to the target session
+  await execFileAsync('tmux', ['switch-client', '-t', paneRef.session]);
+  // Select the target window
+  await execFileAsync('tmux', ['select-window', '-t', `${paneRef.session}:${paneRef.window}`]);
+  // Select the target pane
+  await execFileAsync('tmux', ['select-pane', '-t', target]);
+}
+
 export async function capturePaneText(
   paneRef: TmuxPaneRef,
   lines: number

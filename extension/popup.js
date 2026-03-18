@@ -65,6 +65,7 @@ function renderEventCard(evt) {
         &nbsp;·&nbsp; ${ago}
       </div>
       <div class="event-actions">
+        <button class="focus-btn" data-action="focus" data-id="${evt.id}">Focus</button>
         <button class="resolve-btn" data-action="resolve" data-id="${evt.id}">Resolve</button>
         <button data-action="ack" data-id="${evt.id}">Ack</button>
         <button data-action="snooze" data-id="${evt.id}">Snooze 5m</button>

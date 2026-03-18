@@ -55,7 +55,11 @@ npm test
 3. Matched text is normalized into **confirmation events** with tool, risk level, and evidence
 4. Events are persisted to a local JSON file (`state/active-events.json`)
 5. **HTTP API** serves events to the Chrome extension
-6. Extension shows a badge count, desktop notifications, and a popup panel with actions (Resolve / Ack / Snooze / Ignore)
+6. Extension shows a badge count, desktop notifications, and a popup panel
+7. User clicks **Focus** to jump to the blocked tmux pane, then confirms in the terminal
+8. User clicks **Resolve** after confirming, or **Ack** / **Snooze** / **Ignore** as needed
+
+**Important:** The system never sends input to the terminal. Focus only switches the tmux view. The user always makes the final decision.
 
 ## API Endpoints
 
@@ -64,10 +68,12 @@ npm test
 | GET | `/health` | Service health with watcher status |
 | GET | `/events` | List events (filters: `?status=`, `?tool=`, `?project=`) |
 | GET | `/events/:id` | Get single event |
-| POST | `/events/:id/ack` | Acknowledge event |
+| POST | `/events` | Create event (for testing/external injection) |
+| POST | `/events/:id/focus` | Switch tmux to the event's pane |
+| POST | `/events/:id/ack` | Acknowledge event ("I've seen it") |
 | POST | `/events/:id/snooze` | Snooze event (body: `{"until": "ISO timestamp"}`) |
-| POST | `/events/:id/ignore` | Ignore event |
-| POST | `/events/:id/resolve` | Resolve event |
+| POST | `/events/:id/ignore` | Ignore event permanently |
+| POST | `/events/:id/resolve` | Mark event as resolved |
 
 ## Repository Layout
 
@@ -107,7 +113,7 @@ npm run dev      # start with --watch (rebuild manually)
 
 ## Design Principles
 
-- Safe by default — no auto-confirm of risky actions
+- Safe by default — Focus switches the view, never sends keystrokes
 - Local-first — no cloud dependencies
 - Tool-agnostic — works with any AI tool in tmux
 - Deterministic — rule-based detection, explainable outputs

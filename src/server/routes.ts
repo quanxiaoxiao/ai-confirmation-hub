@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { transitionEvent } from '../core/event.js';
 import type { EventStatus } from '../core/types.js';
 import type { EventStore } from './store.js';
+import { focusPane } from '../watcher/tmux.js';
 
 export interface HealthProvider {
   watcher: () => { ok: boolean; running: boolean; lastScanAt: string | null; errorCount: number };
@@ -37,7 +38,7 @@ function parseUrl(raw: string): { path: string; query: URLSearchParams } {
   return { path: raw.slice(0, idx), query: new URLSearchParams(raw.slice(idx + 1)) };
 }
 
-const eventActionPattern = /^\/events\/([^/]+)\/(ack|snooze|ignore|resolve)$/;
+const eventActionPattern = /^\/events\/([^/]+)\/(ack|snooze|ignore|resolve|focus)$/;
 const eventIdPattern = /^\/events\/([^/]+)$/;
 
 const actionToStatus: Record<string, EventStatus> = {
@@ -74,6 +75,37 @@ export async function handleRequest(
       watcher: watcherHealth,
       store: { ok: true }
     });
+    return;
+  }
+
+  // POST /events — create a new event (for testing or external injection)
+  if (method === 'POST' && path === '/events') {
+    const body = await readBody(req);
+    try {
+      const parsed = JSON.parse(body) as Partial<import('../core/types.js').ConfirmationEvent>;
+      if (!parsed.id || !parsed.tool || !parsed.summary || !parsed.kind || !parsed.risk || !parsed.source) {
+        badRequest(res, 'Missing required fields: id, tool, summary, kind, risk, source');
+        return;
+      }
+      const now = new Date().toISOString();
+      const event: import('../core/types.js').ConfirmationEvent = {
+        id: parsed.id,
+        status: 'pending',
+        tool: parsed.tool,
+        source: parsed.source,
+        kind: parsed.kind,
+        risk: parsed.risk,
+        summary: parsed.summary,
+        evidence: parsed.evidence ?? [],
+        fingerprint: parsed.fingerprint ?? `manual:${parsed.id}`,
+        firstSeenAt: now,
+        lastSeenAt: now
+      };
+      await store.upsert(event);
+      writeJson(res, 201, { event });
+    } catch {
+      badRequest(res, 'Invalid JSON body');
+    }
     return;
   }
 
@@ -115,6 +147,26 @@ export async function handleRequest(
     const eventId = actionMatch[1]!;
     const action = actionMatch[2]!;
     const targetStatus = actionToStatus[action];
+
+    // Focus: switch tmux to the event's pane
+    if (action === 'focus') {
+      const event = await store.get(eventId);
+      if (!event) {
+        notFound(res);
+        return;
+      }
+      try {
+        await focusPane({
+          session: event.source.session,
+          window: event.source.window,
+          pane: event.source.pane
+        });
+        writeJson(res, 200, { ok: true, focused: `${event.source.session}:${event.source.window}.${event.source.pane}` });
+      } catch {
+        writeJson(res, 502, { error: 'focus_failed', message: 'Could not switch to tmux pane. Is tmux running?' });
+      }
+      return;
+    }
 
     if (!targetStatus) {
       badRequest(res, `Unknown action: ${action}`);

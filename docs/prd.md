@@ -6,10 +6,9 @@ AI Confirmation Hub is a local-first confirmation monitoring system for terminal
 
 ## Target Workflow
 
-- tmux
-- multiple panes and windows
+- tmux with multiple panes and windows
 - concurrent Codex / Claude / Opencode sessions
-- browser extension or local dashboard as the notification surface
+- Chrome extension as the notification and action surface
 
 ## Primary Problem
 
@@ -21,42 +20,46 @@ Build a system that:
 
 - detects likely pending confirmations
 - aggregates them into one place
-- notifies the user
-- helps the user jump to the blocked pane
-- preserves manual decision-making
+- notifies the user through browser notifications
+- helps the user jump to the blocked pane (Focus)
+- preserves manual decision-making (no auto-confirm)
 
 ## Non-Goals
 
 - blind auto-confirmation
+- sending keystrokes to the terminal
 - cloud-first architecture
 - hard dependency on one agent
 - terminal replacement
 
-## MVP
+## MVP Features
 
-- tmux watcher
-- rule-based detection
-- event normalization
-- local store
-- local API
-- browser notification integration later
+- tmux watcher with periodic scanning
+- rule-based confirmation detection
+- event normalization with tool, risk, evidence
+- local JSON-backed event store
+- local HTTP API
+- Chrome extension with badge, notifications, popup
+- Focus action to jump to the blocked tmux pane
+- Event lifecycle: Ack / Snooze / Ignore / Resolve
 
 ## Core Principles
 
-- safe by default
-- local-first
-- tool-agnostic
-- deterministic
-- explainable
-- testable
+- safe by default — Focus switches the view, never sends input
+- local-first — no cloud dependencies
+- tool-agnostic — works with any AI tool in tmux
+- deterministic — rule-based detection
+- explainable — events include evidence lines
+- testable — fixture-driven tests
 
 ## Acceptance Criteria
 
-1. can scan tmux panes
-2. can detect basic confirmation prompts
-3. can normalize them into events
+1. can scan tmux panes on a configurable interval
+2. can detect basic confirmation prompts from Codex, Claude, Opencode
+3. can normalize them into events with tool, risk, kind, evidence
 4. can persist active state locally
-5. can expose events through HTTP API
-6. can support browser-facing consumers
-7. can distinguish at least basic risk levels
-8. includes regression fixtures and tests
+5. can expose events through HTTP API with filtering
+6. Chrome extension shows pending events with badge and notifications
+7. Focus button switches tmux to the blocked pane
+8. can distinguish risk levels (low, medium, high, critical)
+9. includes regression fixtures and tests for detection
