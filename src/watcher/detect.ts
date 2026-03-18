@@ -15,6 +15,13 @@ export function inferTool(text: string): ConfirmationEvent['tool'] {
   return best ? best.name : 'unknown';
 }
 
+const MATCH_TAIL_LINES = 20;
+
+function tailLines(text: string, n: number): string {
+  const lines = text.split('\n');
+  return lines.slice(-n).join('\n');
+}
+
 function pickEvidence(text: string): string[] {
   return text
     .split('\n')
@@ -33,12 +40,15 @@ export function detectConfirmationEvent(
   rules: DetectionRule[],
   now: string
 ): ConfirmationEvent | undefined {
-  const rule = findFirstMatchingRule(rules, text);
+  // Only match rules against the last N lines to avoid false positives
+  // from conversation history or scrollback content
+  const recentText = tailLines(text, MATCH_TAIL_LINES);
+  const rule = findFirstMatchingRule(rules, recentText);
   if (!rule) {
     return undefined;
   }
 
-  const evidence = pickEvidence(text);
+  const evidence = pickEvidence(recentText);
   const fingerprint = fingerprintText([
     paneRef.session,
     paneRef.window,
