@@ -25,12 +25,13 @@ Responsibilities:
 tmux-specific observation and detection pipeline.
 
 Responsibilities:
-- enumerate panes
+- enumerate panes (with session, window, pane, window name)
 - capture recent text
-- infer tool/project where possible
-- apply detection rules
+- infer tool/project where possible (by last occurrence of tool keyword)
+- apply detection rules (including task completion)
 - emit candidate events
 - focus (switch to) a specific pane on request
+- list active AI tool panes via `GET /panes`
 
 ### Server
 Persistence and local API.
@@ -50,6 +51,7 @@ Responsibilities:
 - display badge count and desktop notifications
 - show event list with tool, risk, source, summary, evidence
 - provide action buttons: Focus, Resolve, Ack, Snooze, Ignore
+- show active AI panes (Panes tab) with session/window info via `GET /panes`
 
 ## Data Flow
 

@@ -25,6 +25,31 @@ Creates a new event (for testing or external injection).
 
 Required body fields: `id`, `tool`, `summary`, `kind`, `risk`, `source`.
 
+### GET /panes
+Lists tmux panes currently running AI tools (codex, claude, opencode). For each pane, the system captures recent terminal output and infers which tool is active based on the last occurrence of a known tool keyword.
+
+Optional query params:
+- `tool` — filter by tool name (e.g. `?tool=claude`)
+
+Response:
+
+```json
+{
+  "total": 2,
+  "panes": [
+    {
+      "session": "dev",
+      "window": "0",
+      "windowName": "editor",
+      "pane": "1",
+      "tool": "claude"
+    }
+  ]
+}
+```
+
+Returns `502` if tmux is not reachable.
+
 ### POST /events/:id/focus
 Switches the tmux client to the pane associated with the event. This allows the user to jump directly to the blocked terminal pane from the browser extension, without changing the event's lifecycle status.
 
