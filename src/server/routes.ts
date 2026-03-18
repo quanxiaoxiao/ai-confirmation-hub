@@ -2,8 +2,8 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { transitionEvent } from '../core/event.js';
 import type { EventStatus } from '../core/types.js';
 import type { EventStore } from './store.js';
-import { focusPane, listPanesDetailed, capturePaneText } from '../watcher/tmux.js';
-import { inferTool } from '../watcher/detect.js';
+import { focusPane, listPanesDetailed } from '../watcher/tmux.js';
+import { inferToolFromCommand, inferToolFromPid } from '../watcher/detect.js';
 
 export interface HealthProvider {
   watcher: () => { ok: boolean; running: boolean; lastScanAt: string | null; errorCount: number };
@@ -83,11 +83,13 @@ export async function handleRequest(
   if (method === 'GET' && path === '/panes') {
     try {
       const panes = await listPanesDetailed();
-      const captureLines = 50;
       const results = await Promise.all(
         panes.map(async (pane) => {
-          const text = await capturePaneText(pane, captureLines);
-          const tool = inferTool(text);
+          // First try the direct command, then check child processes
+          let tool = inferToolFromCommand(pane.command);
+          if (tool === 'unknown') {
+            tool = await inferToolFromPid(pane.pid);
+          }
           return { ...pane, tool };
         })
       );
@@ -101,7 +103,8 @@ export async function handleRequest(
           window: p.window,
           windowName: p.windowName,
           pane: p.pane,
-          tool: p.tool
+          tool: p.tool,
+          command: p.command
         }))
       });
     } catch {

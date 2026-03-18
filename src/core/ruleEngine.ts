@@ -1,8 +1,18 @@
 import { readFile } from 'node:fs/promises';
 import type { DetectionRule } from './types.js';
 
+const PROXIMITY_WINDOW = 5;
+
 function includesText(haystack: string, needle: string): boolean {
   return haystack.toLowerCase().includes(needle.toLowerCase());
+}
+
+function windowMatchesRule(windowText: string, allConditions: DetectionRule['match']['all'], anyConditions: DetectionRule['match']['any']): boolean {
+  const allOk = (allConditions ?? []).every((c) => includesText(windowText, c.contains));
+  const anyOk = (anyConditions ?? []).length === 0
+    ? true
+    : (anyConditions ?? []).some((c) => includesText(windowText, c.contains));
+  return allOk && anyOk;
 }
 
 export function ruleMatches(rule: DetectionRule, text: string): boolean {
@@ -13,12 +23,27 @@ export function ruleMatches(rule: DetectionRule, text: string): boolean {
   const allConditions = rule.match.all ?? [];
   const anyConditions = rule.match.any ?? [];
 
-  const allOk = allConditions.every((condition) => includesText(text, condition.contains));
-  const anyOk = anyConditions.length === 0
-    ? true
-    : anyConditions.some((condition) => includesText(text, condition.contains));
+  // If only `any` conditions (no `all`), a single-line match suffices
+  if (allConditions.length === 0) {
+    return windowMatchesRule(text, allConditions, anyConditions);
+  }
 
-  return allOk && anyOk;
+  // When `all` conditions exist, require all keywords to appear
+  // within a sliding window of PROXIMITY_WINDOW consecutive lines.
+  // This prevents scattered keywords across unrelated output from matching.
+  const lines = text.split('\n');
+  if (lines.length <= PROXIMITY_WINDOW) {
+    return windowMatchesRule(text, allConditions, anyConditions);
+  }
+
+  for (let i = 0; i <= lines.length - PROXIMITY_WINDOW; i++) {
+    const windowText = lines.slice(i, i + PROXIMITY_WINDOW).join('\n');
+    if (windowMatchesRule(windowText, allConditions, anyConditions)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export function findFirstMatchingRule(

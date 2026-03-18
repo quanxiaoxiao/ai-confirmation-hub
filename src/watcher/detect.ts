@@ -1,8 +1,18 @@
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { createPendingEvent } from '../core/event.js';
 import { fingerprintText } from '../core/fingerprint.js';
 import { findFirstMatchingRule } from '../core/ruleEngine.js';
 import type { ConfirmationEvent, DetectionRule } from '../core/types.js';
 import type { TmuxPaneRef } from './tmux.js';
+
+const execFileAsync = promisify(execFile);
+
+const TOOL_KEYWORDS: { name: ConfirmationEvent['tool']; pattern: RegExp }[] = [
+  { name: 'opencode', pattern: /opencode/i },
+  { name: 'codex', pattern: /codex/i },
+  { name: 'claude', pattern: /claude/i },
+];
 
 export function inferTool(text: string): ConfirmationEvent['tool'] {
   const lower = text.toLowerCase();
@@ -15,7 +25,46 @@ export function inferTool(text: string): ConfirmationEvent['tool'] {
   return best ? best.name : 'unknown';
 }
 
-const MATCH_TAIL_LINES = 20;
+export function inferToolFromCommand(command: string): ConfirmationEvent['tool'] {
+  for (const { name, pattern } of TOOL_KEYWORDS) {
+    if (pattern.test(command)) return name;
+  }
+  return 'unknown';
+}
+
+export async function inferToolFromPid(pid: string): Promise<ConfirmationEvent['tool']> {
+  // Recursively search child processes (up to 3 levels deep)
+  const visited = new Set<string>();
+  const queue = [pid];
+  let depth = 0;
+  const maxDepth = 3;
+
+  while (queue.length > 0 && depth < maxDepth) {
+    const nextQueue: string[] = [];
+    for (const currentPid of queue) {
+      if (visited.has(currentPid)) continue;
+      visited.add(currentPid);
+      try {
+        const { stdout } = await execFileAsync('pgrep', ['-P', currentPid]);
+        const childPids = stdout.trim().split('\n').filter(Boolean);
+        for (const cpid of childPids) {
+          try {
+            const { stdout: cmdline } = await execFileAsync('ps', ['-p', cpid, '-o', 'command=']);
+            const tool = inferToolFromCommand(cmdline);
+            if (tool !== 'unknown') return tool;
+            nextQueue.push(cpid);
+          } catch { /* process may have exited */ }
+        }
+      } catch { /* no children or pgrep failed */ }
+    }
+    queue.length = 0;
+    queue.push(...nextQueue);
+    depth++;
+  }
+  return 'unknown';
+}
+
+const MATCH_TAIL_LINES = 5;
 
 function tailLines(text: string, n: number): string {
   const lines = text.split('\n');

@@ -11,6 +11,8 @@ export interface TmuxPaneRef {
 
 export interface TmuxPaneInfo extends TmuxPaneRef {
   windowName: string;
+  command: string;
+  pid: string;
 }
 
 export async function listPanes(): Promise<TmuxPaneRef[]> {
@@ -23,7 +25,7 @@ export async function listPanesDetailed(): Promise<TmuxPaneInfo[]> {
     'list-panes',
     '-a',
     '-F',
-    '#S\t#I\t#P\t#W'
+    '#S\t#I\t#P\t#W\t#{pane_current_command}\t#{pane_pid}'
   ]);
 
   return stdout
@@ -36,7 +38,9 @@ export async function listPanesDetailed(): Promise<TmuxPaneInfo[]> {
         session: parts[0] ?? '',
         window: parts[1] ?? '',
         pane: parts[2] ?? '',
-        windowName: parts[3] ?? ''
+        windowName: parts[3] ?? '',
+        command: parts[4] ?? '',
+        pid: parts[5] ?? ''
       };
     });
 }

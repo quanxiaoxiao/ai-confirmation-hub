@@ -23,10 +23,13 @@
     "id": "rule_overwrite_file_basic",
     "enabled": true,
     "match": {
+      "all": [
+        { "contains": "?" }
+      ],
       "any": [
         { "contains": "overwrite" },
         { "contains": "replace file" },
-        { "contains": "already exists" }
+        { "contains": "file already exists" }
       ]
     },
     "extract": {
@@ -39,11 +42,16 @@
     "id": "rule_permission_request_basic",
     "enabled": true,
     "match": {
+      "all": [
+        { "contains": "?" }
+      ],
       "any": [
-        { "contains": "allow" },
-        { "contains": "permission" },
-        { "contains": "approve" },
-        { "contains": "grant access" }
+        { "contains": "allow access" },
+        { "contains": "grant access" },
+        { "contains": "grant permission" },
+        { "contains": "approve this" },
+        { "contains": "allow this" },
+        { "contains": "do you want to allow" }
       ]
     },
     "extract": {
@@ -56,10 +64,14 @@
     "id": "rule_run_command_basic",
     "enabled": true,
     "match": {
+      "all": [
+        { "contains": "?" }
+      ],
       "any": [
         { "contains": "run command" },
         { "contains": "execute command" },
-        { "contains": "continue?" }
+        { "contains": "run this command" },
+        { "contains": "execute this" }
       ]
     },
     "extract": {

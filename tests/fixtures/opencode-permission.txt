@@ -1,5 +1,5 @@
 Opencode
 This action requires permission.
 
-Allow network access for this step?
-Approve to continue.
+Do you want to allow this access?
+Approve this to continue.

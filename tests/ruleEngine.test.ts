@@ -28,10 +28,13 @@ const overwriteRule: DetectionRule = {
   id: 'rule_overwrite_file_basic',
   enabled: true,
   match: {
+    all: [
+      { contains: '?' }
+    ],
     any: [
       { contains: 'overwrite' },
       { contains: 'replace file' },
-      { contains: 'already exists' }
+      { contains: 'file already exists' }
     ]
   },
   extract: {
@@ -45,11 +48,16 @@ const permissionRule: DetectionRule = {
   id: 'rule_permission_request_basic',
   enabled: true,
   match: {
+    all: [
+      { contains: '?' }
+    ],
     any: [
-      { contains: 'allow' },
-      { contains: 'permission' },
-      { contains: 'approve' },
-      { contains: 'grant access' }
+      { contains: 'allow access' },
+      { contains: 'grant access' },
+      { contains: 'grant permission' },
+      { contains: 'approve this' },
+      { contains: 'allow this' },
+      { contains: 'do you want to allow' }
     ]
   },
   extract: {
@@ -90,19 +98,51 @@ describe('ruleMatches', () => {
     assert.equal(ruleMatches(applyPatchRule, text), false);
   });
 
-  it('matches overwrite rule with any-only conditions', () => {
-    const text = 'File already exists. Continue?';
+  it('matches overwrite rule with all + any conditions', () => {
+    const text = 'File already exists. Overwrite?';
     assert.equal(ruleMatches(overwriteRule, text), true);
   });
 
   it('is case insensitive', () => {
-    const text = 'OVERWRITE the file now';
+    const text = 'OVERWRITE the file now?';
     assert.equal(ruleMatches(overwriteRule, text), true);
+  });
+
+  it('does not match overwrite without question mark', () => {
+    const text = 'File was overwritten successfully.';
+    assert.equal(ruleMatches(overwriteRule, text), false);
   });
 
   it('does not match disabled rules', () => {
     const text = 'anything goes here';
     assert.equal(ruleMatches(disabledRule, text), false);
+  });
+
+  it('does not match when all-condition keywords are scattered across distant lines', () => {
+    // "apply" on line 1, "changes" on line 8, "confirm" on line 10 — too far apart
+    const lines = [
+      'We will apply the fix.',
+      'line 2',
+      'line 3',
+      'line 4',
+      'line 5',
+      'line 6',
+      'line 7',
+      'Here are the changes.',
+      'line 9',
+      'Please confirm.'
+    ];
+    const text = lines.join('\n');
+    assert.equal(ruleMatches(applyPatchRule, text), false);
+  });
+
+  it('matches when all-condition keywords are within proximity window', () => {
+    const lines = [
+      'Apply these changes?',
+      'Press Enter to confirm.'
+    ];
+    const text = lines.join('\n');
+    assert.equal(ruleMatches(applyPatchRule, text), true);
   });
 
   it('does not match unrelated text', () => {
@@ -129,8 +169,8 @@ describe('findFirstMatchingRule', () => {
 
 describe('findAllMatchingRules', () => {
   it('returns all matching rules', () => {
-    // This text matches both permission (contains "allow") and overwrite (contains "already exists")
-    const text = 'File already exists. Allow overwrite?';
+    // This text matches both overwrite (contains "overwrite" + "?") and permission (contains "do you want to allow" + "?")
+    const text = 'This will overwrite existing files.\nDo you want to allow this?';
     const results = findAllMatchingRules(allRules, text);
     assert.ok(results.length >= 2);
     const ids = results.map((r) => r.id);
