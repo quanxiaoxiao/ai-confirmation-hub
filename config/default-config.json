@@ -1,0 +1,13 @@
+{
+  "scanIntervalMs": 2000,
+  "captureLines": 100,
+  "notificationCooldownMs": 60000,
+  "eventRetentionDays": 7,
+  "rescanOnUserAction": true,
+  "tmux": {
+    "enabled": true
+  },
+  "store": {
+    "stateDir": "./state"
+  }
+}

@@ -1,0 +1,71 @@
+[
+  {
+    "id": "rule_apply_patch_basic",
+    "enabled": true,
+    "match": {
+      "all": [
+        { "contains": "apply" },
+        { "contains": "changes" }
+      ],
+      "any": [
+        { "contains": "confirm" },
+        { "contains": "press enter" },
+        { "contains": "yes/no" }
+      ]
+    },
+    "extract": {
+      "kind": "apply_patch",
+      "risk": "medium",
+      "summary": "Waiting for confirmation to apply changes"
+    }
+  },
+  {
+    "id": "rule_overwrite_file_basic",
+    "enabled": true,
+    "match": {
+      "any": [
+        { "contains": "overwrite" },
+        { "contains": "replace file" },
+        { "contains": "already exists" }
+      ]
+    },
+    "extract": {
+      "kind": "overwrite_file",
+      "risk": "high",
+      "summary": "Waiting for confirmation to overwrite file"
+    }
+  },
+  {
+    "id": "rule_permission_request_basic",
+    "enabled": true,
+    "match": {
+      "any": [
+        { "contains": "allow" },
+        { "contains": "permission" },
+        { "contains": "approve" },
+        { "contains": "grant access" }
+      ]
+    },
+    "extract": {
+      "kind": "permission_request",
+      "risk": "medium",
+      "summary": "Waiting for permission confirmation"
+    }
+  },
+  {
+    "id": "rule_run_command_basic",
+    "enabled": true,
+    "match": {
+      "any": [
+        { "contains": "run command" },
+        { "contains": "execute command" },
+        { "contains": "continue?" }
+      ]
+    },
+    "extract": {
+      "kind": "run_command",
+      "risk": "high",
+      "summary": "Waiting for command execution confirmation"
+    }
+  }
+]

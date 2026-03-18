@@ -1,0 +1,5 @@
+2026-03-18 10:00:01 INFO  Application started
+2026-03-18 10:00:02 INFO  Connected to database
+2026-03-18 10:00:03 INFO  Listening on port 3000
+2026-03-18 10:00:04 DEBUG Processing request GET /api/health
+2026-03-18 10:00:05 INFO  Request completed in 12ms

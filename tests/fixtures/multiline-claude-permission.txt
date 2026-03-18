@@ -1,0 +1,11 @@
+Claude Code
+
+I need to write to the following files:
+  - src/components/Button.tsx
+  - src/components/Input.tsx
+  - src/styles/theme.css
+
+This will overwrite existing files.
+
+Do you want to allow these changes?
+Type yes/no to confirm.

@@ -1,0 +1,5 @@
+Codex
+I need to run a shell command to install the missing dependency.
+
+Run command: npm install lodash
+Continue?

@@ -1,0 +1,17 @@
+{
+  "name": "ai-confirmation-hub",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first confirmation monitoring system for tmux-based AI workflows.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test dist/tests/**/*.js",
+    "dev": "node --watch dist/src/cli/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.3"
+  }
+}
