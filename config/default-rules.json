@@ -67,5 +67,24 @@
       "risk": "high",
       "summary": "Waiting for command execution confirmation"
     }
+  },
+  {
+    "id": "rule_task_complete_basic",
+    "enabled": true,
+    "match": {
+      "any": [
+        { "contains": "task completed" },
+        { "contains": "task complete" },
+        { "contains": "all changes have been applied" },
+        { "contains": "finished successfully" },
+        { "contains": "all tasks completed" },
+        { "contains": "completed successfully" }
+      ]
+    },
+    "extract": {
+      "kind": "task_complete",
+      "risk": "low",
+      "summary": "AI agent task has completed"
+    }
   }
 ]

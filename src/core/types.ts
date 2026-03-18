@@ -14,6 +14,7 @@ export type EventKind =
   | 'interactive_prompt'
   | 'menu_selection'
   | 'warning_continue'
+  | 'task_complete'
   | 'unknown_confirmation';
 
 export type RiskLevel =

@@ -124,6 +124,29 @@ describe('detectConfirmationEvent with fixtures', () => {
     assert.equal(event.tool, 'claude');
   });
 
+  it('detects codex task completion', async () => {
+    const text = await loadFixture('codex-task-complete.txt');
+    const rules = await loadDefaultRules();
+    const event = detectConfirmationEvent(paneRef, text, rules, now)!;
+
+    assert.ok(event, 'Expected event to be detected');
+    assert.equal(event.kind, 'task_complete');
+    assert.equal(event.risk, 'low');
+    assert.equal(event.tool, 'codex');
+    assert.equal(event.status, 'pending');
+  });
+
+  it('detects claude task completion', async () => {
+    const text = await loadFixture('claude-task-complete.txt');
+    const rules = await loadDefaultRules();
+    const event = detectConfirmationEvent(paneRef, text, rules, now)!;
+
+    assert.ok(event, 'Expected event to be detected');
+    assert.equal(event.kind, 'task_complete');
+    assert.equal(event.risk, 'low');
+    assert.equal(event.tool, 'claude');
+  });
+
   it('returns undefined for normal log output (false positive check)', async () => {
     const text = await loadFixture('false-positive-log.txt');
     const rules = await loadDefaultRules();

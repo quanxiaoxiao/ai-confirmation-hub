@@ -146,7 +146,7 @@ describe('loadRulesFromFile', () => {
     const rules = await loadRulesFromFile(
       join(process.cwd(), 'config', 'default-rules.json')
     );
-    assert.ok(rules.length >= 4);
+    assert.ok(rules.length >= 5);
     assert.equal(rules[0]!.id, 'rule_apply_patch_basic');
   });
 });

@@ -1,0 +1,4 @@
+Claude
+I've made all the requested changes to the codebase.
+Updated src/core/types.ts and src/server/routes.ts.
+All tasks completed.
