@@ -1,17 +1,19 @@
-import { createServer, type Server } from 'node:http';
+import { serve } from '@hono/node-server';
+import type { ServerType } from '@hono/node-server';
 import type { EventStore } from './store.js';
-import { handleRequest, type HealthProvider } from './routes.js';
+import { createRouter, type HealthProvider } from './routes.js';
 
 export function startServer(
   port: number,
   store: EventStore,
-  health?: HealthProvider
-): Server {
-  const server = createServer((req, res) => {
-    void handleRequest(req, res, store, health);
-  });
+  health?: HealthProvider,
+): ServerType {
+  const app = createRouter(store, health);
 
-  server.listen(port, () => {
+  const server = serve({
+    fetch: app.fetch,
+    port,
+  }, () => {
     console.log(`[server] listening on http://localhost:${port}`);
   });
 

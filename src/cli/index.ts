@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { loadConfig } from '../core/config.js';
 import { loadRulesFromFile } from '../core/ruleEngine.js';
 import { startServer } from '../server/app.js';
-import { JsonFileEventStore, defaultStoreFile } from '../server/store.js';
+import { createJsonFileEventStore, defaultStoreFile } from '../server/store.js';
 import { createScanner } from '../watcher/scanner.js';
 
 const PORT = 47321;
@@ -16,7 +16,7 @@ async function main(): Promise<void> {
 
   console.log(`[init] loaded ${rules.length} detection rules`);
 
-  const store = new JsonFileEventStore(defaultStoreFile(config.store.stateDir));
+  const store = createJsonFileEventStore(defaultStoreFile(config.store.stateDir));
   const scanner = createScanner(config, rules, store);
 
   const health = {

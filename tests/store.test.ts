@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { rm, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { JsonFileEventStore } from '../src/server/store.js';
+import { createJsonFileEventStore } from '../src/server/store.js';
 import { createPendingEvent } from '../src/core/event.js';
 import type { ConfirmationEvent } from '../src/core/types.js';
 
@@ -19,13 +19,13 @@ function makeEvent(id: string, fingerprint: string): ConfirmationEvent {
   });
 }
 
-describe('JsonFileEventStore', () => {
+describe('createJsonFileEventStore', () => {
   let storePath: string;
-  let store: JsonFileEventStore;
+  let store: ReturnType<typeof createJsonFileEventStore>;
 
   beforeEach(async () => {
     storePath = join(tmpdir(), `ach-test-${Date.now()}-${Math.random().toString(36).slice(2)}.json`);
-    store = new JsonFileEventStore(storePath);
+    store = createJsonFileEventStore(storePath);
     try { await rm(storePath); } catch { /* ignore */ }
   });
 
@@ -53,6 +53,17 @@ describe('JsonFileEventStore', () => {
 
     const notFound = await store.get('evt_missing');
     assert.equal(notFound, undefined);
+  });
+
+  it('waits for pending writes before serving reads', async () => {
+    const event = makeEvent('evt_1', 'fp_1');
+    const write = store.saveAll([event]);
+
+    const found = await store.get('evt_1');
+    await write;
+
+    assert.ok(found !== undefined);
+    assert.equal(found.id, 'evt_1');
   });
 
   it('upserts new events', async () => {
